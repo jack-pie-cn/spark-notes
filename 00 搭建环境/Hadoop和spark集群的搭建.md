@@ -461,7 +461,7 @@ https://www.cnblogs.com/zejin2008/p/5935934.html
 	
 		第二步，修改文件名称
 			命令： mv spark-2.3.1-bin-hadoop2.7 spark-2.3.1
-	
+
 
 
 		第三步，修改spark的配置文件
@@ -518,17 +518,20 @@ https://www.cnblogs.com/zejin2008/p/5935934.html
 						slave02
 					最后，保存修改并退出：wq
 
-	
+
+​	
+​		
+​	
 		第四步，复制安装文件到从节点
-			(1)复制spark文件
-				scp -r ~/app/spark-2.3.1 hadoop@slave01:~/app
-				scp -r ~/app/spark-2.3.1 hadoop@slave02:~/app
-	
-			(2)复制scala文件
+				(1)复制spark文件
+					scp -r ~/app/spark-2.3.1 hadoop@slave01:~/app
+					scp -r ~/app/spark-2.3.1 hadoop@slave02:~/app	
+	                
+				(2)复制scala文件
 				scp -r ~/app/scala-2.11.12 hadoop@slave01:~/app
 				scp -r ~/app/scala-2.11.12 hadoop@slave02:~/app
 	
-			(3)备注：此处无需在从节点上配置scala和spark的环境变量
+				(3)备注：此处无需在从节点上配置scala和spark的环境变量
 	
 		第五步，启动集群
 			(1)进入master节点的spark目录
@@ -569,6 +572,21 @@ https://www.cnblogs.com/zejin2008/p/5935934.html
 	
 			(3)集群模式--yarn-cluster
 				./bin/spark-submit --class org.apache.spark.examples.SparkPi --master yarn --name Pi /home/hadoop/app/spark-2.3.1/examples/jars/spark-examples_2.11-2.3.1.jar 100
+
+	4.修改spark打印日志的级别，减少屏幕上打印的日志量，便于阅读
+		修改spark的conf目录下的log4j.properties
+		命令：
+			cp log4j.properties.template log4j.properties
+			vim log4j.properties
+			修改第19行的配置项为WARN：
+				# Set everything to be logged to the console
+				log4j.rootCategory=WARN, console
+	
+		将修改后的文件发送到slave01和slave02节点：
+			scp log4j.properties hadoop@slave01:/home/hadoop/app/spark-3.0.1/conf
+			scp log4j.properties hadoop@slave02:/home/hadoop/app/spark-3.0.1/conf
+
+
 
 
 九、HDFS（hadoop分布式文件系统）
