@@ -425,164 +425,150 @@ https://www.cnblogs.com/zejin2008/p/5935934.html
 
 ### 二、安装spark
 
-#### 1.安装yarn
-
-​	参考hadoop2.8.4的安装文档安装完hadoop后，相关yarn的配置也已经完成，可以使用yarn了。
-
-#### 2.安装Scala
-
-​	1）版本匹配问题
-​		请参考spark的官方文档，其中对hadoop、Scala的版本有指定。
-​		链接：http://spark.apache.org/downloads.html
-
-​	2)安装Scala
-
-​		先在master节点上执行如下安装步骤，后续会将配置好的安装文件复制到各slave节点。
-
-​		第一步，下载安装包，复制到~/app目录，解压
-​			解压命令：tar -zxvf 
-
-​		第二步，配置环境变量
-​			(1)打开配置文件，命令：sudo vim ~/.bashrc
-​				参考链接：bashrc和profile的区别 https://www.cnblogs.com/sddai/p/6534630.html
-​					bashrc和profile的差异在于：
-
-​					bashrc是在系统启动后就会自动运行。
-
-​					profile是在用户登录后才会运行。
-
-​					进行设置后，可运用source bashrc命令更新bashrc，也可运用source profile命令更新profile。
-​						PS：通常我们修改bashrc,有些linux的发行版本不一定有profile这个文件
-
-​					/etc/profile中设定的变量(全局)的可以作用于任何用户，而~/.bashrc等中设定的变量(局部)只能继承/etc/profile中的变量，他们是"父子"关系。
-​			(2)配置SCALA_HOME，修改PATH，命令如下
-   			 SCALA_HOME=/home/hadoop/app/scala-2.11.12
-​				export PATH=$PATH:$SCALA_HOME/bin
-
-​			(3)使环境变量生效：source ~/.bashrc
-​			(4)验证：scala -version  
-​					如果出现如下信息，表示scala已经安装成功：
-​					Scala code runner version 2.11.12 -- Copyright 2002-2017, LAMP/EPFL
-
-#### 	3.安装spark
-
-​	第一步，下载安装包，复制到~/app目录，解压
-​		下载链接：http://spark.apache.org/downloads.html
-​		解压命令：tar -zxvf spark-2.3.1-bin-hadoop2.7.tgz
-
-​	第二步，修改文件名称
-​		命令： mv spark-2.3.1-bin-hadoop2.7 spark-2.3.1
-
-​	第三步，修改spark的配置文件
-​		（1）进入配置文件目录
-​			cd ~/app/spark-2.3.1/conf
-
-​		（2）配置spark-env.sh
-​			复制：cp spark-env.sh.template spark-env.sh
-​			打开：vim spark-env.sh
-
-​		    增加配置信息
-​			export JAVA_HOME=/home/hadoop/app/jdk1.8
-​			export SCALA_HOME=/home/hadoop/app/scala-2.11.12
-​			export HADOOP_HOME=/home/hadoop/app/hadoop-2.8.4
-​			export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-
-​			#指定spark master的IP及端口
-​			#SPARK_MASTER_IP=master
-​			SPARK_MASTER_HOST=master01 
-​			SPARK_MASTER_PORT=7077
-
-​			#job history conf
-​			#注意：
-​			#1、因为hadoop的core-site.xml中配置的hdfs的默认端口为9000,所以spark.history.fs.logDirectory中hdfs的访问端口也是9000。
-​			#2、否则，会报错，如下：failed to launch: nice -n 0 /usr/local/bigdata/spark-2.3.1/bin/spark-class org.apache.spark.deploy.history.HistoryServer
-​			#3、参考链接：https://blog.csdn.net/kancy110/article/details/80374631
-
-​			export SPARK_HISTORY_OPTS="-Dspark.history.ui.port=18080 -Dspark.history.retainedApplications=5 -Dspark.history.fs.logDirectory=hdfs://master01:9000/spark/historyLog"
-
-​		（3）配置spark-default.conf
-​				#添加配置：保存应用运行的日志
-​				复制：cp spark-default.conf.template  spark-default.conf
-​				打开：vim spark-default.conf
-
-​				增加配置信息
-​				spark.master                     spark://master01:7077
-​				spark.eventLog.enabled           true
-
-​					 #注意：
-​					 #1、hdfs的访问端口应该与hadoop中core-site.xml中配置的一致，即9000
-​					 #2、日志存放的位置，应该与spark-env.sh中spark.history.fs.logDirectory的目录相同。
-​					 #3、日志存放的位置可以是本地（file://xxx)或hdfs，且该目录必须提前创建好。
-​					 #4、其他配置信息，见官网： http://spark.apache.org/docs/latest/monitoring.html
-
-​				spark.eventLog.dir               hdfs://master01:9000/spark/historyLog  
-​				spark.eventLog.compress 		  true
+	1.安装yarn
+		参考hadoop2.8.4的安装文档安装完hadoop后，相关yarn的配置也已经完成，可以使用yarn了。
+	2.安装Scala
+		1）版本匹配问题
+			请参考spark的官方文档，其中对hadoop、Scala的版本有指定。
+			链接：http://spark.apache.org/downloads.html
+	
+		2)安装Scala
+			# 先在master节点上执行如下安装步骤，后续会将配置好的安装文件复制到各slave节点。
+			第一步，下载安装包，复制到~/app目录，解压
+				解压命令：tar -zxvf 
+	
+			第二步，配置环境变量
+				(1)打开配置文件，命令：sudo vim ~/.bashrc
+					参考链接：bashrc和profile的区别 https://www.cnblogs.com/sddai/p/6534630.html
+						bashrc和profile的差异在于：
+						1. bashrc是在系统启动后就会自动运行。
+						2. profile是在用户登录后才会运行。
+						3. 进行设置后，可运用source bashrc命令更新bashrc，也可运用source profile命令更新profile。
+						PS：通常我们修改bashrc,有些linux的发行版本不一定有profile这个文件
+						4. /etc/profile中设定的变量(全局)的可以作用于任何用户，而~/.bashrc等中设定的变量(局部)只能继承/etc/profile中的变量，他们是"父子"关系。
+				(2)配置SCALA_HOME，修改PATH，命令如下
+				    SCALA_HOME=/home/hadoop/app/scala-2.11.12
+					export PATH=$PATH:$SCALA_HOME/bin
+	
+				(3)使环境变量生效：source ~/.bashrc
+				(4)验证：scala -version  
+						如果出现如下信息，表示scala已经安装成功：
+						Scala code runner version 2.11.12 -- Copyright 2002-2017, LAMP/EPFL
+	3.安装spark
+		第一步，下载安装包，复制到~/app目录，解压
+			下载链接：http://spark.apache.org/downloads.html
+			解压命令：tar -zxvf spark-2.3.1-bin-hadoop2.7.tgz
+	
+		第二步，修改文件名称
+			命令： mv spark-2.3.1-bin-hadoop2.7 spark-2.3.1
+	
 
 
+		第三步，修改spark的配置文件
+			（1）进入配置文件目录
+				cd ~/app/spark-2.3.1/conf
+	
+			（2）配置spark-env.sh
+				复制：cp spark-env.sh.template spark-env.sh
+				打开：vim spark-env.sh
+	
+			    增加配置信息
+				export JAVA_HOME=/home/hadoop/app/jdk1.8
+				export SCALA_HOME=/home/hadoop/app/scala-2.11.12
+				export HADOOP_HOME=/home/hadoop/app/hadoop-2.8.4
+				export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+				#指定spark master的IP及端口
+				#SPARK_MASTER_IP=master
+				SPARK_MASTER_HOST=master01 
+				SPARK_MASTER_PORT=7077
+	
+				#job history conf
+				#注意：
+				#1、因为hadoop的core-site.xml中配置的hdfs的默认端口为9000,所以spark.history.fs.logDirectory中hdfs的访问端口也是9000。
+				#2、否则，会报错，如下：failed to launch: nice -n 0 /usr/local/bigdata/spark-2.3.1/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+				#3、参考链接：https://blog.csdn.net/kancy110/article/details/80374631
+	
+				export SPARK_HISTORY_OPTS="-Dspark.history.ui.port=18080 -Dspark.history.retainedApplications=5 -Dspark.history.fs.logDirectory=hdfs://master01:9000/spark/historyLog"
 
-​			（4）配置从节点信息
-​				复制配置文件： cp slaves.template slaves
-​				打开文件： vim slaves
-​				增加从节点信息：
-​					首先，删除原有信息 localhost
-​					然后，添加从节点：
-​						slave01
-​						slave02
-​					最后，保存修改并退出：wq
 
+			（3）配置spark-default.conf
+				#添加配置：保存应用运行的日志
+				复制：cp spark-default.conf.template  spark-default.conf
+				打开：vim spark-default.conf
+	
+				增加配置信息
+					 spark.master                     spark://master01:7077
+					 spark.eventLog.enabled           true
+					 				 #注意：
+					 #1、hdfs的访问端口应该与hadoop中core-site.xml中配置的一致，即9000
+					 #2、日志存放的位置，应该与spark-env.sh中spark.history.fs.logDirectory的目录相同。
+					 #3、日志存放的位置可以是本地（file://xxx)或hdfs，且该目录必须提前创建好。
+					 #4、其他配置信息，见官网： http://spark.apache.org/docs/latest/monitoring.html
+	
+					 spark.eventLog.dir               hdfs://master01:9000/spark/historyLog  
+					 spark.eventLog.compress 		  true
+					 
+			（4）配置从节点信息
+				复制配置文件： cp slaves.template slaves
+				打开文件： vim slaves
+				增加从节点信息：
+					首先，删除原有信息 localhost
+					然后，添加从节点：
+						slave01
+						slave02
+					最后，保存修改并退出：wq
 
-
-​		第四步，复制安装文件到从节点
-​			(1)复制spark文件
-​				scp -r ~/app/spark-2.3.1 hadoop@slave01:~/app
-​				scp -r ~/app/spark-2.3.1 hadoop@slave02:~/app
-
-​			(2)复制scala文件
-​				scp -r ~/app/scala-2.11.12 hadoop@slave01:~/app
-​				scp -r ~/app/scala-2.11.12 hadoop@slave02:~/app
-
-​			(3)备注：此处无需在从节点上配置scala和spark的环境变量
-
-​		第五步，启动集群
-​			(1)进入master节点的spark目录
-​				cd ~/app/spark-2.3.1
-
-​			(2)	启动集群
-​				./sbin/start-all.sh
-
-​			(3)验证：查看相关进程是否启动
-​				在每个节点上执行jps命令，如果在主从节点上分别看到Master、Worker进程则集群启动成功。
-
-​		第六步，查看监控网页
-​			master01:8080
-
-​			备注：如果windows系统上没有修改hosts文件，则无法显示。
-​			修改windows上hosts文件的方法：
-​				(1)进入如下目录
-​					C:\Windows\System32\drivers\etc
-​				(2)右键单击hosts文件，依次点击
-​					右键-->属性-->安全-->选择当前账户-->编辑-->勾选需要所有权限-->确定
-​				(3)打开hsots文件，添加master节点的IP
-​					192.168.80.10 master01
-
-​		第七步，运行spark自带的示例程序
-​			参考链接：
-​				官方文档：http://spark.apache.org/docs/latest/quick-start.html
-​				spark submit参数及调优：https://www.cnblogs.com/haoyy/p/6893943.html
-​				【帮助命令】./bin/spark-submit --help
-
-​			(0)切换到spark安装目录
-​				cd ~/app/spark-2.3.1  #在该目录下执行以下验证命令
-​				
-​			(1)本地模式
-​				./bin/run-example SparkPi 10 --master local[2]
-
-​			(2)集群模式--standalone
-​				./bin/spark-submit --class org.apache.spark.examples.SparkPi --master spark://master:7077 lib/spark-examples-1.6.3-hadoop2.6.0.jar 100
-
-​			(3)集群模式--yarn-cluster
-​				./bin/spark-submit --class org.apache.spark.examples.SparkPi --master yarn --name Pi /home/hadoop/app/spark-2.3.1/examples/jars/spark-examples_2.11-2.3.1.jar 100
-
+	
+		第四步，复制安装文件到从节点
+			(1)复制spark文件
+				scp -r ~/app/spark-2.3.1 hadoop@slave01:~/app
+				scp -r ~/app/spark-2.3.1 hadoop@slave02:~/app
+	
+			(2)复制scala文件
+				scp -r ~/app/scala-2.11.12 hadoop@slave01:~/app
+				scp -r ~/app/scala-2.11.12 hadoop@slave02:~/app
+	
+			(3)备注：此处无需在从节点上配置scala和spark的环境变量
+	
+		第五步，启动集群
+			(1)进入master节点的spark目录
+				cd ~/app/spark-2.3.1
+	
+			(2)	启动集群
+				./sbin/start-all.sh
+	
+			(3)验证：查看相关进程是否启动
+				在每个节点上执行jps命令，如果在主从节点上分别看到Master、Worker进程则集群启动成功。
+	
+		第六步，查看监控网页
+			master01:8080
+	
+			备注：如果windows系统上没有修改hosts文件，则无法显示。
+			修改windows上hosts文件的方法：
+				(1)进入如下目录
+					C:\Windows\System32\drivers\etc
+				(2)右键单击hosts文件，依次点击
+					右键-->属性-->安全-->选择当前账户-->编辑-->勾选需要所有权限-->确定
+				(3)打开hsots文件，添加master节点的IP
+					192.168.80.10 master01
+	
+		第七步，运行spark自带的示例程序
+			参考链接：
+				官方文档：http://spark.apache.org/docs/latest/quick-start.html
+				spark submit参数及调优：https://www.cnblogs.com/haoyy/p/6893943.html
+				【帮助命令】./bin/spark-submit --help
+	
+			(0)切换到spark安装目录
+				cd ~/app/spark-2.3.1  #在该目录下执行以下验证命令
+				
+			(1)本地模式
+				./bin/run-example SparkPi 10 --master local[2]
+	
+			(2)集群模式--standalone
+				./bin/spark-submit --class org.apache.spark.examples.SparkPi --master spark://master:7077 lib/spark-examples-1.6.3-hadoop2.6.0.jar 100
+	
+			(3)集群模式--yarn-cluster
+				./bin/spark-submit --class org.apache.spark.examples.SparkPi --master yarn --name Pi /home/hadoop/app/spark-2.3.1/examples/jars/spark-examples_2.11-2.3.1.jar 100
 
 
 九、HDFS（hadoop分布式文件系统）
